@@ -1,0 +1,4 @@
+dist/
+Dockerfile*.built
+Dockerfile*.log
+node_modules

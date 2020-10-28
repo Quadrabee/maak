@@ -1,0 +1,30 @@
+{
+  "name": "maak",
+  "version": "0.0.1",
+  "description": "",
+  "directories": {
+    "example": "examples",
+    "lib": "lib"
+  },
+  "bin": {
+    "maak": "dist/index.js"
+  },
+  "scripts": {
+    "build": "babel lib/ -d dist",
+    "start": "npm run build && node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "find-up": "^5.0.0",
+    "mustache": "^4.0.1",
+    "omelette": "^0.4.15-1",
+    "yaml": "^1.10.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.1",
+    "@babel/preset-env": "^7.12.1"
+  }
+}

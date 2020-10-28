@@ -1,0 +1,8 @@
+project:
+  name: qbmake
+components:
+  basic:
+  multi-container:
+    containers:
+      php-fpm:
+      nginx:
