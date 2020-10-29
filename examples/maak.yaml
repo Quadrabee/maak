@@ -2,6 +2,10 @@ project:
   name: qbmake
 components:
   basic:
+    context: basic
+    deps:
+      include: '**/*'
+      ignore: ['Dockerfile*.log', 'Dockerfile*.built']
   multi-container:
     containers:
       php-fpm:
