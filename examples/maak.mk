@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := maak.mk
 SHELL=/bin/bash -o pipefail
-COMPONENTS := basic multi-container
-CONTAINERS := basic multi-container.php-fpm multi-container.nginx
+COMPONENTS := basic custom-deps multi-container
+CONTAINERS := basic custom-deps multi-container.php-fpm multi-container.nginx
 ENV := dev
 
 images: $(addsuffix .image,$(CONTAINERS))
@@ -75,7 +75,57 @@ basic/Dockerfile.pushed: basic/Dockerfile.built
 
 basic.push: basic/Dockerfile.pushed
 
-multi-container/Dockerfile.php-fpm.built: multi-container/Dockerfile.php-fpm $(shell find multi-container -type f | grep -v 'Dockerfile.*.built\|Dockerfile.*.pushed\|Dockerfile.*.log' | grep 'multi-container/Dockerfile.php-fpm\|.*')
+custom-deps/Dockerfile.built: custom-deps/Dockerfile $(shell find custom-deps -type f | grep -v 'Dockerfile.*.built\|Dockerfile.*.pushed\|Dockerfile.*.log' | grep 'custom-deps/Dockerfile\|.*')
+	docker build -t qbmake/custom-deps custom-deps -f custom-deps/Dockerfile | tee custom-deps/Dockerfile.log
+	touch custom-deps/Dockerfile.built
+
+custom-deps.image: custom-deps/Dockerfile.built
+
+# Shuts the component down
+custom-deps.down:
+	docker-compose stop custom-deps
+
+# Wakes the component up
+custom-deps.up: custom-deps.image
+	docker-compose up -d --force-recreate custom-deps
+
+# Wakes the component up using the last known image
+custom-deps.on:
+	docker-compose up -d custom-deps
+
+# Alias for down
+custom-deps.off:
+	docker-compose stop custom-deps
+
+custom-deps.restart:
+	docker-compose stop custom-deps
+	docker-compose up -d custom-deps
+
+# Show logs in --follow mode for the component
+custom-deps.logs:
+	docker-compose logs -f custom-deps
+
+# Opens a bash shell on the component
+custom-deps.bash:
+	docker-compose exec custom-deps bash
+
+# Removes every compilation/docker assets for the component
+custom-deps.clean:
+	rm -rf custom-deps/Dockerfile.log custom-deps/Dockerfile.pushed custom-deps/Dockerfile.built
+
+# Pushes the image to the private repository
+custom-deps/Dockerfile.pushed: custom-deps/Dockerfile.built
+	@if [ -z "$(DOCKER_REGISTRY)" ]; then \
+		echo "No private registry defined, ignoring. (set DOCKER_REGISTRY or place it in .env file)"; \
+		return 1; \
+	fi
+	docker tag qbmake/custom-deps $(DOCKER_REGISTRY)/qbmake/custom-deps:$(DOCKER_TAG)
+	docker push $(DOCKER_REGISTRY)/qbmake/custom-deps:$(DOCKER_TAG) | tee -a custom-deps/Dockerfile.log
+	touch custom-deps/Dockerfile.pushed
+
+custom-deps.push: custom-deps/Dockerfile.pushed
+
+multi-container/Dockerfile.php-fpm.built: multi-container/Dockerfile.php-fpm $(shell find multi-container -type f | grep -v 'Dockerfile.*.built\|Dockerfile.*.pushed\|Dockerfile.*.log' | grep 'multi-container/Dockerfile.php-fpm\|**/*')
 	docker build -t qbmake/multi-container.php-fpm multi-container -f multi-container/Dockerfile.php-fpm | tee multi-container/Dockerfile.php-fpm.log
 	touch multi-container/Dockerfile.php-fpm.built
 
@@ -125,7 +175,7 @@ multi-container/Dockerfile.php-fpm.pushed: multi-container/Dockerfile.php-fpm.bu
 
 multi-container.php-fpm.push: multi-container.php-fpm/Dockerfile.pushed
 
-multi-container/Dockerfile.nginx.built: multi-container/Dockerfile.nginx $(shell find multi-container -type f | grep -v 'Dockerfile.*.built\|Dockerfile.*.pushed\|Dockerfile.*.log' | grep 'multi-container/Dockerfile.nginx\|.*')
+multi-container/Dockerfile.nginx.built: multi-container/Dockerfile.nginx $(shell find multi-container -type f | grep -v 'Dockerfile.*.built\|Dockerfile.*.pushed\|Dockerfile.*.log' | grep 'multi-container/Dockerfile.nginx\|**/*')
 	docker build -t qbmake/multi-container.nginx multi-container -f multi-container/Dockerfile.nginx | tee multi-container/Dockerfile.nginx.log
 	touch multi-container/Dockerfile.nginx.built
 

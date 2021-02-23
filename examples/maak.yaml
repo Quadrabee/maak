@@ -3,10 +3,16 @@ project:
 components:
   basic:
     context: basic
+  custom-deps:
     deps:
       include: '**/*'
-      ignore: ['Dockerfile*.log', 'Dockerfile*.built']
   multi-container:
     containers:
       php-fpm:
+        deps:
+          include: '**/*'
+          ignore: ['Dockerfile*.log', 'Dockerfile*.built']
       nginx:
+        deps:
+          include: '**/*'
+          ignore: -['Dockerfile*.log', 'Dockerfile*.built']
